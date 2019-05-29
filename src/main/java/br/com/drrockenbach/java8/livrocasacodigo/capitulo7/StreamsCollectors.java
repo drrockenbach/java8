@@ -3,6 +3,7 @@ package br.com.drrockenbach.java8.livrocasacodigo.capitulo7;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,8 +33,63 @@ public class StreamsCollectors {
 		
 		System.out.println("-------Obtendo lista do stream--------");
 		obtendoListDoStream(usuarios, 100);
+		
+		map(usuarios);
+		
 	}
 	
+	private static void map(List<Usuario> usuarios) {
+		
+		/**
+		 * Para evitar o boxing causado abaixo, pelo fato de o map retornar um int, da pra utilizar o mapToInt.
+		 * Isso por que a interface Function, no seu método apply, retorna um Integer, neste caso, em função de generics não aceitar tipo primitivo.
+		 * Para resolver isso, o mapToint utiliza ToIntFunction, onde seu método retorna um int primitivo
+		 * Veficiar item 7.7 IntStream e a família de Streams
+		 */
+		usuarios.stream()
+			.map(u -> u.getPontos())
+//			.collect(Collectors.toList());
+			.forEach(p -> System.out.println("Pontos: "+ p));
+		
+		/**
+		 * Desta forma não causa o boxing.
+		 */
+		
+		double average = usuarios.stream().mapToInt(Usuario::getPontos).average().getAsDouble();
+		
+		System.out.println("Média de pontos: "+average);
+		
+		/**
+		 * Caso a lista de usuários for vazia, o método getAsDouble(), que retornaria um NoSuchElementException. 
+		 * Isso por que o average retorna um OptionalDouble, que é uma interface que permite trabalhar com algumas possibilidades em caso de nulos ou outros casos.
+		 * O exemplo desse caso, onde usuários for vazio, teriamos que retornar média zero. Ao invés de utilizar um if para verificar isso, basta utilizar o método orElse(0.0).
+		 * Caso a lista seja null, ocorrerá nullpointer ao invocar o método stream()
+		 * Existem ainda outros métodos, como orElseThrow, para retornar uma exception, ifPresent, onde pode se executar alguma coisa ex: .ifPresent(valor -> janela.atualiza(valor));
+		 **/
+		
+		List<Usuario> usuarios2 = new ArrayList<>();
+		
+		double average2 = usuarios2.stream()
+				.mapToInt(Usuario::getPontos)
+				.average()
+				.orElse(0.0);
+		
+		System.out.println("Média zerada ao passar lista vazia: "+ average2);
+		
+		
+		/**
+		 * Retorna usuário com maior número de pontos
+		 */
+		
+		Optional<String> maxNome = usuarios2
+				.stream()
+				.max(Comparator.comparingInt(Usuario::getPontos))
+				.map(u -> u.getNome());
+		
+		System.out.println("Usuário com maior pontuação: "+maxNome);
+		
+	}
+
 	private static void obtendoListDoStream(List<Usuario> usuarios, int i) {
 
 		// Desta forma até funciona, mas não é a forma mais elegante, digamos assim.
@@ -107,9 +163,12 @@ public class StreamsCollectors {
 	 */
 	private static void tonarModeradorXUsuariosComMaisPontos(List<Usuario> usuarios, Integer qtd) {
 		usuarios.sort(Comparator.comparing(Usuario::getPontos).reversed());
+		
 		usuarios.forEach(System.out::println);
+		
 		usuarios.subList(0, qtd)
-		.forEach(Usuario::tornaModerador);
+			.forEach(Usuario::tornaModerador);
+		
 		System.out.println("--------------------");
 		usuarios.forEach(System.out::println);
 	}
