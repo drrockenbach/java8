@@ -60,9 +60,18 @@ public class TrabalhandoComFiles {
 	
 		
 		/**
-		 * SOLUÇÃO NA CLASSE FlatMap
+		 * SOLUÇÃO NA CLASSE FlatMap para o problema acima de Stream<Stream<String>>
+		 * 
+		 * 
+		 * Abaixo mostrando todas as linhas dos arquivos
 		 */
 		
+		Stream<String> linhas =
+				Files.list(Paths.get(".\\src\\main\\java\\br\\com\\drrockenbach\\java8\\livrocasacodigo\\capitulo8"))
+				.filter(p -> p.toString().endsWith(".java"))
+				.flatMap(p -> lines(p));
+		
+		linhas.forEach(System.out::println);
 		
 	}
 	
