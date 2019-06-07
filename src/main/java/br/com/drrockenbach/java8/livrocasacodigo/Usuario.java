@@ -18,6 +18,12 @@ public class Usuario {
 		this.nome = nome;
 		this.moderador = false;
 	}
+	
+	public Usuario(String nome, int pontos, boolean moderador) {
+		this.pontos = pontos;
+		this.nome = nome;
+		this.moderador = moderador;
+	}
 
 	public String getNome() {
 		return nome;

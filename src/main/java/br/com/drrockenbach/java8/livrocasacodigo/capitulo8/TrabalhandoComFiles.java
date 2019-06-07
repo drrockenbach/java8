@@ -5,6 +5,10 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TrabalhandoComFiles {
@@ -16,6 +20,47 @@ public class TrabalhandoComFiles {
 		listandoArquivosFiltrandoExtensao();
 		
 		exibirAsLinhasDoArquivo();
+		
+		contarLinhasArquivo();
+		
+		mapComLinhasDoArquivo();
+	}
+
+	private static void mapComLinhasDoArquivo() throws IOException {
+
+		/**
+		 * Se quisermos gerar um mapa de cada arquivo para toda a lista de linhas
+		 * contidas nos arquivos, podemos utilizar um outro coletor e gerar um Map<Path,
+		 * List<String>>:
+		 */
+		
+		Map<Path, List<String>> content=
+				Files.list(Paths.get(".\\src\\main\\java\\br\\com\\drrockenbach\\java8\\livrocasacodigo\\capitulo8"))
+				.filter(p -> p.toString().endsWith(".java"))
+				.collect(Collectors.toMap(
+				Function.identity(), // mesmo coisa que p -> p
+				p -> lines(p).collect(Collectors.toList())));
+		
+	}
+
+	private static void contarLinhasArquivo() throws IOException {
+
+		
+		/**
+		 * O toMap recebe duas Functions. A primeira produzirá a chave (no nosso caso o
+		 * próprio Path) e a segunda produzirá o valor (a quantidade de linhas). Como é
+		 * comum precisarmos de um lambda que retorna o próprio argumento (o nosso p ->
+		 * p), podemos utilizar Function.identity() para deixar mais claro.
+		 */
+		
+		Map<Path, Long> lines=
+				Files.list(Paths.get(".\\src\\main\\java\\br\\com\\drrockenbach\\java8\\livrocasacodigo\\capitulo8"))
+				.filter(p -> p.toString().endsWith(".java"))
+				.collect(Collectors.toMap(
+				p -> p, // aqui daria para utilizar Function.identity(), que teria o mesmo resultado
+				p -> lines(p).count()));
+		
+		lines.forEach((path, count) -> System.out.println("Arquivo: "+ path+ " tem "+count +" linhas."));
 	}
 
 	private static void exibirAsLinhasDoArquivo() throws IOException {
