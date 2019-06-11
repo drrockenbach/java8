@@ -5,19 +5,19 @@ import static java.util.Arrays.asList;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Comprar {
+public class Testes {
 
 	public static void main(String[] args) {
 
@@ -41,7 +41,16 @@ public class Comprar {
 		Payment payment3 = new Payment(asList(beauty, vingadores, bach), today, adriano);
 		Payment payment4 = new Payment(asList(bach, poderosas, amelie), lastMonth, guilherme);
 		Payment payment5 = new Payment(asList(beauty, amelie), yesterday, paulo);
+		
 		List<Payment> payments = asList(payment1, payment2, payment3, payment4, payment5);
+		
+		BigDecimal monthlyFee = new BigDecimal("99.90");
+		
+		Subscription s1 = new Subscription(monthlyFee, yesterday.minusMonths(5), paulo);
+		Subscription s2 = new Subscription(monthlyFee, yesterday.minusMonths(8), today.minusMonths(1), rodrigo);
+		Subscription s3 = new Subscription(monthlyFee, yesterday.minusMonths(5), today.minusMonths(2), adriano);
+		
+		List<Subscription> subscriptions = asList(s1, s2, s3);
 		
 		ordenandoOsPagamentosPorDataEImprimir(payments);
 		
@@ -56,6 +65,58 @@ public class Comprar {
 		produtosCadaCliente(payments);
 		
 		clienteMaisEspecial(payments);
+		
+		agrupandoPorDatas(payments);
+		
+		faturamentoPorMes(payments);
+		
+		calcularQuantidadeMesesPagos(subscriptions);
+		
+	}
+
+	private static void calcularQuantidadeMesesPagos(List<Subscription> subscriptions) {
+
+		Subscription s1 = subscriptions.get(0);
+		Subscription s2 = subscriptions.get(1);
+		Subscription s3 = subscriptions.get(2);
+		
+		/**
+		 * Se a assinatura ainda estiver ativa, ou seja, a data end não estiver preenchida, compara com o dia atual.
+		 */
+		long meses = ChronoUnit.MONTHS.between(s1.getBegin(), LocalDateTime.now());
+		
+		long meses2 = ChronoUnit.MONTHS.between(s2.getBegin(), s2.getEnd().orElse(LocalDateTime.now()));
+		
+		BigDecimal valorTotalS1 = s1.getMonthlyFee().multiply(new BigDecimal(meses));
+		
+		
+		BigDecimal totalPago = subscriptions.stream().map(s -> s.getTotalPaid()).reduce(BigDecimal.ZERO, BigDecimal::add);
+		
+		System.out.println("Meses: "+meses);
+		System.out.println("Meses2: "+meses2);
+		System.out.println("valorTotalS1: "+valorTotalS1);
+		System.out.println("totalPago: "+totalPago);
+		
+	}
+
+	private static void faturamentoPorMes(List<Payment> payments) {
+
+		Map<YearMonth, List<Payment>> pagamentosAgrupadosPorData = payments.stream().collect(Collectors.groupingBy(p -> YearMonth.from(p.getDate())));
+		
+		
+		Map<YearMonth, BigDecimal> pagamentosAnoMes = pagamentosAgrupadosPorData.entrySet().stream()
+			.collect(Collectors.groupingBy(Map.Entry::getKey, 
+					 Collectors.reducing(BigDecimal.ZERO, entry -> entry.getValue().stream().map(Payment::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add), BigDecimal::add)));
+		
+		pagamentosAnoMes.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).forEach(System.out::println);
+		
+	}
+
+	private static void agrupandoPorDatas(List<Payment> payments) {
+
+		Map<YearMonth, List<Payment>> paymentsPerMonth = payments.stream().collect(Collectors.groupingBy(p -> YearMonth.from(p.getDate())));
+		
+		paymentsPerMonth.entrySet().stream().sorted(Comparator.comparing(entry -> entry.getKey())).forEach(System.out::println);;
 		
 	}
 
